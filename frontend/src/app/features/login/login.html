@@ -1,0 +1,56 @@
+<div class="login-page">
+  <div class="fondo" aria-hidden="true"><span class="b1"></span><span class="b2"></span><span class="b3"></span></div>
+
+  <main class="login-col">
+    <span class="app-icon"><mat-icon>healing</mat-icon></span>
+    <h1>OdontoFich</h1>
+    <p class="lema">Pagos e insumos de las prácticas clínicas, en un solo lugar.</p>
+
+    <section class="login-card">
+      <form (ngSubmit)="ingresar()">
+        <div class="campos">
+          <label class="campo">
+            <mat-icon>person</mat-icon>
+            <input name="usuario" autocomplete="username" placeholder="Usuario" required
+                   [ngModel]="usuario()" (ngModelChange)="usuario.set($event)" />
+          </label>
+          <label class="campo">
+            <mat-icon>lock</mat-icon>
+            <input name="password" autocomplete="current-password" placeholder="Contraseña" required
+                   [type]="verPassword() ? 'text' : 'password'"
+                   [ngModel]="password()" (ngModelChange)="password.set($event)" />
+            <button type="button" class="ojo" (click)="verPassword.set(!verPassword())"
+                    [attr.aria-label]="verPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+              <mat-icon>{{ verPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+          </label>
+        </div>
+
+        @if (error()) {
+          <div class="login-error" role="alert"><mat-icon>error</mat-icon> {{ error() }}</div>
+        }
+
+        <button mat-flat-button class="btn-guardar ingresar" type="submit"
+                [disabled]="!usuario() || !password() || cargando()">
+          @if (cargando()) { <mat-spinner diameter="18" /> } @else { Continuar }
+        </button>
+      </form>
+    </section>
+
+    <section class="demo">
+      <h2>Cuentas de demostración</h2>
+      <div class="demo-lista">
+        @for (d of demo; track d.usuario) {
+          <button type="button" class="demo-fila" [class.elegida]="usuario() === d.usuario" (click)="usarDemo(d.usuario)">
+            <span class="demo-icono" [style.background]="d.color"><mat-icon>{{ d.icono }}</mat-icon></span>
+            <span class="demo-texto"><strong>{{ d.rol }}</strong><small>{{ d.detalle }}</small></span>
+            <mat-icon class="demo-check">{{ usuario() === d.usuario ? 'check_circle' : 'chevron_right' }}</mat-icon>
+          </button>
+        }
+      </div>
+      <p class="demo-pie">Contraseña de todas las cuentas: <b>odonto123</b></p>
+    </section>
+
+    <p class="pie">Carrera de Odontología · Facultad Integral del Chaco · UAGRM</p>
+  </main>
+</div>

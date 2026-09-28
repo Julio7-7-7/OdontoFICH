@@ -1,0 +1,118 @@
+<div class="page-container">
+  @if (sesion(); as s) {
+    <div class="header-card">
+      <div class="header-card-top">
+        <div class="header-card-title">
+          <div class="header-icon"><mat-icon>medical_services</mat-icon></div>
+          <div>
+            <h2>{{ s.tratamiento }}</h2>
+            <p class="subtitle">
+              {{ s.sigla }} · {{ s.materia }} · {{ fecha(s.fecha) }} @if (s.fecha === hoy) { (hoy) } · {{ s.docente }}
+              @if (s.observacion) { · <em>{{ s.observacion }}</em> }
+            </p>
+          </div>
+        </div>
+        <div class="header-card-stats">
+          <div class="summary-stat"><mat-icon>check_circle</mat-icon><span class="summary-label">Habilitados</span><span class="summary-num">{{ s.habilitados }}</span></div>
+          <div class="summary-stat"><mat-icon>block</mat-icon><span class="summary-label">Bloqueados</span><span class="summary-num">{{ s.bloqueados }}</span></div>
+        </div>
+        <div class="fila-acciones">
+          <a mat-stroked-button routerLink="/docente/sesiones"><mat-icon>arrow_back</mat-icon> Sesiones</a>
+          @if (abierta() && !conEntregas()) {
+            <button mat-stroked-button (click)="editar()"><mat-icon>edit_calendar</mat-icon> Corregir</button>
+            <button mat-stroked-button (click)="anular()"><mat-icon>block</mat-icon> Anular</button>
+          }
+        </div>
+      </div>
+    </div>
+
+    @if (!abierta()) {
+      <div class="aviso danger"><mat-icon>event_busy</mat-icon><div>Sesión anulada. {{ s.observacion }}</div></div>
+    }
+
+    <div class="grid-detalle">
+      <section class="panel-card">
+        <h3><mat-icon>groups</mat-icon> Estudiantes de la sesión
+          <span class="spacer"></span>
+          <button mat-icon-button (click)="cargar()" matTooltip="Actualizar estados (p. ej. tras un pago en caja)"><mat-icon>refresh</mat-icon></button>
+        </h3>
+        @if (s.habilitaciones.length) {
+          <table mat-table [dataSource]="s.habilitaciones" class="full-width-table">
+            <ng-container matColumnDef="numero">
+              <th mat-header-cell *matHeaderCellDef class="col-center">N°</th>
+              <td mat-cell *matCellDef="let h; let i = index" class="col-center"><span class="numero-cell">{{ i + 1 }}</span></td>
+            </ng-container>
+            <ng-container matColumnDef="estudiante">
+              <th mat-header-cell *matHeaderCellDef>Estudiante</th>
+              <td mat-cell *matCellDef="let h" class="name-cell">
+                <a [routerLink]="['/estudiantes', h.registro]" class="link"><span class="reg">{{ h.registro }}</span> {{ h.estudiante }}</a>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="avance">
+              <th mat-header-cell *matHeaderCellDef>Plan</th>
+              <td mat-cell *matCellDef="let h">
+                <div class="avance">
+                  <div class="barra"><span [class.verde]="h.realizados >= h.requeridos" [style.width.%]="h.requeridos ? (100 * h.realizados) / h.requeridos : 0"></span></div>
+                  <small>{{ h.realizados }}/{{ h.requeridos }}</small>
+                </div>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="estado">
+              <th mat-header-cell *matHeaderCellDef>Estado</th>
+              <td mat-cell *matCellDef="let h">
+                <span class="chip" [class.ok]="h.estado === 'habilitado'" [class.danger]="h.estado === 'bloqueado'"
+                      [class.info]="h.estado === 'entregado'" [class.muted]="h.estado === 'retirado'">
+                  <mat-icon>{{ h.estado === 'habilitado' ? 'check' : h.estado === 'bloqueado' ? 'block' : h.estado === 'entregado' ? 'inventory' : 'person_remove' }}</mat-icon>
+                  {{ h.estado === 'entregado' ? 'Retiró su kit' : (h.estado | titlecase) }}
+                </span>
+                @if (h.motivo && h.estado === 'bloqueado') { <div class="motivo">{{ h.motivo }}</div> }
+                @if (h.entregado_en) { <div class="motivo muted">{{ fechaHora(h.entregado_en) }}</div> }
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="acciones">
+              <th mat-header-cell *matHeaderCellDef class="col-center">Acciones</th>
+              <td mat-cell *matCellDef="let h" class="col-center">
+                @if (abierta() && (h.estado === 'habilitado' || h.estado === 'bloqueado')) {
+                  <button mat-icon-button (click)="retirar(h)" matTooltip="Quitar de la sesión"><mat-icon>person_remove</mat-icon></button>
+                }
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+            <tr mat-row *matRowDef="let row; columns: columnas"></tr>
+          </table>
+        } @else {
+          <div class="empty-state"><mat-icon>person_add</mat-icon><p>Marque en la lista de la derecha a los estudiantes que harán la práctica.</p></div>
+        }
+      </section>
+
+      @if (abierta()) {
+        <section class="panel-card">
+          <h3><mat-icon>how_to_reg</mat-icon> Habilitar estudiantes</h3>
+          <p class="muted ayuda">Inscritos en {{ s.sigla }}. El sistema muestra de antemano quién quedaría bloqueado y por qué.</p>
+          @if (pendientesDeMarcar().length) {
+            <mat-checkbox [checked]="todosMarcados()" (change)="alternarTodos($event.checked)">Marcar todos</mat-checkbox>
+            <div class="candidatos">
+              @for (c of pendientesDeMarcar(); track c.registro) {
+                <label class="candidato" [class.bloq]="!c.quedaria_habilitado">
+                  <mat-checkbox [checked]="seleccion().includes(c.registro)" (change)="alternar(c.registro, $event.checked)" />
+                  <span class="cand-info">
+                    <span><span class="reg">{{ c.registro }}</span> {{ c.estudiante }} <small class="muted">· {{ c.realizados }}/{{ c.requeridos }}</small></span>
+                    @if (c.quedaria_habilitado) { <small class="ok-txt">Quedará habilitado</small> }
+                    @else { <small class="bloq-txt">Quedará bloqueado: {{ c.motivo }}</small> }
+                  </span>
+                </label>
+              }
+            </div>
+            <button mat-flat-button class="btn-guardar w-100" [disabled]="!seleccion().length || guardando()" (click)="habilitar()">
+              <mat-icon>how_to_reg</mat-icon> Marcar {{ seleccion().length || '' }} estudiante(s)
+            </button>
+          } @else {
+            <p class="no-mods">Todos los inscritos ya están en la sesión.</p>
+          }
+        </section>
+      }
+    </div>
+  } @else {
+    <div class="loading-state"><mat-spinner diameter="44" /></div>
+  }
+</div>

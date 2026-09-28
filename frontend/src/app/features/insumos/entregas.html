@@ -1,0 +1,96 @@
+<div class="page-container">
+  <div class="header-card">
+    <div class="header-card-top">
+      <div class="header-card-title">
+        <div class="header-icon"><mat-icon>assignment_turned_in</mat-icon></div>
+        <div>
+          <h2>Entregas de kits</h2>
+          <p class="subtitle">Estudiantes que el docente habilitó y ya tienen la cuota pagada</p>
+        </div>
+      </div>
+      <div class="header-card-stats">
+        <div class="summary-stat"><mat-icon>pending_actions</mat-icon><span class="summary-label">Por entregar</span><span class="summary-num">{{ habilitados() }}</span></div>
+        <div class="summary-stat"><mat-icon>inventory</mat-icon><span class="summary-label">Entregados</span><span class="summary-num">{{ entregadas().length }}</span></div>
+      </div>
+      <mat-form-field class="header-search" subscriptSizing="dynamic">
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput [ngModel]="filtro()" (ngModelChange)="filtro.set($event)" placeholder="Registro o nombre..." />
+      </mat-form-field>
+    </div>
+  </div>
+
+  <div class="filtros">
+    <mat-form-field subscriptSizing="dynamic" class="f-fecha">
+      <mat-label>Día de la práctica</mat-label>
+      <input matInput [matDatepicker]="dp" [ngModel]="dia()" (ngModelChange)="dia.set($event); cargar()" />
+      <mat-datepicker-toggle matSuffix [for]="dp" /><mat-datepicker #dp />
+    </mat-form-field>
+    <mat-slide-toggle [checked]="verBloqueados()" (change)="verBloqueados.set($event.checked); cargar()">
+      Mostrar también bloqueados (para explicarle al estudiante el motivo)
+    </mat-slide-toggle>
+    <span class="spacer"></span>
+    <button mat-stroked-button (click)="cargar()"><mat-icon>refresh</mat-icon> Actualizar</button>
+  </div>
+
+  @if (pendientes() === null) {
+    <div class="loading-state"><mat-spinner diameter="44" /></div>
+  } @else {
+    <div class="tarjetas">
+      @for (p of visibles(); track p.id_habilitacion) {
+        <article class="tarjeta" [class.bloq]="p.estado === 'bloqueado'">
+          <header>
+            <div>
+              <div class="t-nombre"><span class="reg">{{ p.registro }}</span> {{ p.estudiante }}</div>
+              <div class="muted t-sub">{{ p.tratamiento }} · {{ p.sigla }} · {{ p.docente }}</div>
+            </div>
+            @if (p.estado === 'bloqueado') { <span class="chip danger"><mat-icon>block</mat-icon> Bloqueado</span> }
+            @else { <span class="chip ok"><mat-icon>check</mat-icon> Habilitado</span> }
+          </header>
+
+          @if (p.estado === 'bloqueado') {
+            <div class="aviso danger"><mat-icon>info</mat-icon><div>{{ p.motivo }}</div></div>
+          }
+
+          <ul class="kit">
+            @for (k of p.kit; track k.codigo_insumo) {
+              <li [class.falta]="k.stock_actual < k.cantidad">
+                <span>{{ k.insumo }}</span>
+                <span class="money">{{ num(k.cantidad) }} {{ k.unidad_medida }}</span>
+                <small class="muted">stock {{ num(k.stock_actual) }}</small>
+              </li>
+            }
+          </ul>
+
+          @if (p.estado === 'habilitado') {
+            @if (!p.stock_suficiente) {
+              <div class="aviso warn"><mat-icon>warning</mat-icon><div>No hay stock suficiente para este kit.</div></div>
+            }
+            <button mat-flat-button class="btn-guardar w-100" [disabled]="!p.stock_suficiente || entregando() === p.id_habilitacion"
+                    (click)="entregar(p)">
+              @if (entregando() === p.id_habilitacion) { <mat-spinner diameter="18" /> } @else { <mat-icon>inventory</mat-icon> }
+              Entregar kit
+            </button>
+          }
+        </article>
+      } @empty {
+        <div class="empty-state">
+          <mat-icon>event_available</mat-icon>
+          <h4>Nada pendiente para {{ fecha(aIsoDia()) }}</h4>
+          <p>Cuando un docente habilite estudiantes para ese día, aparecerán aquí.</p>
+        </div>
+      }
+    </div>
+
+    @if (entregadas().length) {
+      <section class="panel-card">
+        <h3><mat-icon>inventory</mat-icon> Kits entregados este día</h3>
+        @for (e of entregadas(); track e.id) {
+          <div class="entregada">
+            <span><span class="reg">{{ e.registro }}</span> {{ e.estudiante }} · <strong>{{ e.tratamiento }}</strong></span>
+            <span class="muted">{{ fechaHora(e.fecha_hora) }} · {{ e.encargado }} · plan {{ e.realizados }}/{{ e.requeridos }}</span>
+          </div>
+        }
+      </section>
+    }
+  }
+</div>

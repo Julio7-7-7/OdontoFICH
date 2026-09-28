@@ -1,0 +1,98 @@
+<div class="page-container">
+  @if (estudiante(); as e) {
+    <div class="header-card">
+      <div class="header-card-top">
+        <div class="header-card-title">
+          <div class="header-icon"><mat-icon>school</mat-icon></div>
+          <div>
+            <h2>{{ e.apellido }} {{ e.nombre }}</h2>
+            <p class="subtitle">
+              Registro <span class="reg">{{ e.registro }}</span> · {{ e.anio_carrera }}° año
+              @if (e.ci) { · CI {{ e.ci }} } @if (e.telefono) { · Tel. {{ e.telefono }} }
+              @if (e.estado === 'inactivo') { · <span class="chip muted">Inactivo</span> }
+            </p>
+          </div>
+        </div>
+        <div class="fila-acciones">
+          @if (auth.puede('caja')) {
+            <a mat-stroked-button routerLink="/caja/cobros" [queryParams]="{ registro: e.registro }"><mat-icon>point_of_sale</mat-icon> Cobros</a>
+          }
+          @if (auth.esAdmin()) {
+            <button mat-raised-button class="btn-nuevo" (click)="inscribir()"><mat-icon>how_to_reg</mat-icon><span>Inscribir a materias</span></button>
+          }
+        </div>
+      </div>
+    </div>
+
+    @if (verCuenta()) {
+      @if (cuenta(); as c) {
+        <div class="aviso" [class.ok]="c.habilitado_hoy" [class.danger]="!c.habilitado_hoy">
+          <mat-icon>{{ c.habilitado_hoy ? 'check_circle' : 'block' }}</mat-icon>
+          <div>
+            Deuda {{ c.anio }}: <strong>{{ bs(c.total) }}</strong> · pagado {{ bs(c.pagado) }} · saldo <strong>{{ bs(c.saldo) }}</strong> —
+            @if (c.habilitado_hoy) { puede retirar material hoy. } @else { {{ c.motivo_bloqueo_hoy }} }
+          </div>
+        </div>
+
+        <section class="panel-card">
+          <h3><mat-icon>menu_book</mat-icon> Materias inscritas {{ c.anio }}</h3>
+          <div class="inscripciones">
+            @for (i of c.inscripciones; track i.id) {
+              <div class="insc" [class.anulada]="i.estado === 'anulada'">
+                <span><strong>{{ i.sigla }}</strong> · {{ i.materia }}</span>
+                <span class="money">{{ bs(i.monto) }}</span>
+                @if (i.estado === 'anulada') {
+                  <span class="chip muted" [matTooltip]="i.motivo_anulacion ?? ''">Anulada</span>
+                } @else if (auth.esAdmin()) {
+                  <button mat-icon-button (click)="anular(i)" matTooltip="Anular inscripción"><mat-icon>block</mat-icon></button>
+                }
+              </div>
+            }
+          </div>
+        </section>
+      } @else {
+        <div class="aviso info"><mat-icon>info</mat-icon><div>Todavía no está inscrito en ninguna materia de la gestión activa.</div></div>
+      }
+    }
+
+    <section class="panel-card">
+      <h3><mat-icon>traffic</mat-icon> Avance del plan de prácticas {{ avance()?.anio ?? '' }}</h3>
+      @if (avance(); as a) {
+        @for (m of a.materias; track m.sigla) {
+          <div class="materia">
+            <div class="m-head">
+              <strong>{{ m.sigla }} · {{ m.materia }}</strong>
+              <span class="m-pct">{{ m.avance_pct }} %</span>
+            </div>
+            <div class="barra"><span [class.verde]="m.avance_pct >= 100" [style.width.%]="m.avance_pct"></span></div>
+            @if (m.tratamientos.length) {
+              <div class="tratamientos">
+                @for (t of m.tratamientos; track t.codigo) {
+                  <div class="trat">
+                    <span class="semaforo" [class]="'semaforo ' + t.semaforo"></span>
+                    <span class="t-nombre">{{ t.tratamiento }}</span>
+                    <span class="t-cant">{{ t.realizados }}/{{ t.requeridos }}</span>
+                    @if (t.kits_extra_comprados) {
+                      <span class="chip warn" matTooltip="Kits comprados como extra (repeticiones fuera del plan)">+{{ t.kits_extra_comprados }} extra</span>
+                    }
+                  </div>
+                }
+              </div>
+            } @else {
+              <p class="no-mods">Materia teórica: sin prácticas.</p>
+            }
+          </div>
+        } @empty {
+          <p class="no-mods">Sin materias inscritas en la gestión.</p>
+        }
+        <div class="leyenda">
+          <span class="semaforo rojo"></span> Sin empezar <span class="semaforo amarillo"></span> En curso <span class="semaforo verde"></span> Completo
+        </div>
+      } @else {
+        <div class="loading-state"><mat-spinner diameter="36" /></div>
+      }
+    </section>
+  } @else {
+    <div class="loading-state"><mat-spinner diameter="44" /></div>
+  }
+</div>

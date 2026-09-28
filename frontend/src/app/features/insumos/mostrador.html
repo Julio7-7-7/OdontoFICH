@@ -1,0 +1,111 @@
+<div class="page-container">
+  <div class="header-card">
+    <div class="header-card-top">
+      <div class="header-card-title">
+        <div class="header-icon"><mat-icon>storefront</mat-icon></div>
+        <div>
+          <h2>Mostrador de extras</h2>
+          <p class="subtitle">Material fuera del kit, en efectivo, con recibo. Un kit repetido por encima del plan también se vende aquí.</p>
+        </div>
+      </div>
+      <div class="header-card-stats">
+        <div class="summary-stat"><mat-icon>receipt</mat-icon><span class="summary-label">Ventas hoy</span><span class="summary-num">{{ ventasHoy().length }}</span></div>
+      </div>
+    </div>
+  </div>
+
+  @if (cerrado()) {
+    <div class="aviso warn"><mat-icon>lock_clock</mat-icon><div>La caja de hoy ya fue cerrada: no se pueden registrar más ventas hasta mañana.</div></div>
+  }
+
+  <div class="grid-venta">
+    <section class="panel-card">
+      <h3><mat-icon>add_shopping_cart</mat-icon> Nueva venta</h3>
+      <app-buscar-estudiante etiqueta="Estudiante" (elegido)="estudiante.set($event)" />
+
+      <div class="agregar">
+        <mat-button-toggle-group [value]="tipo()" (change)="tipo.set($event.value); codigo.set(null)" hideSingleSelectionIndicator>
+          <mat-button-toggle value="insumo">Insumo suelto</mat-button-toggle>
+          <mat-button-toggle value="kit">Kit completo</mat-button-toggle>
+        </mat-button-toggle-group>
+        <mat-form-field class="f-item" subscriptSizing="dynamic">
+          <mat-label>{{ tipo() === 'insumo' ? 'Insumo' : 'Tratamiento (kit)' }}</mat-label>
+          <mat-select [ngModel]="codigo()" (ngModelChange)="codigo.set($event)">
+            @for (o of opciones(); track o.codigo) { <mat-option [value]="o.codigo">{{ o.texto }}</mat-option> }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field class="f-cant" subscriptSizing="dynamic">
+          <mat-label>Cantidad</mat-label>
+          <input matInput type="number" min="1" [ngModel]="cantidad()" (ngModelChange)="cantidad.set($event)" />
+        </mat-form-field>
+        <button mat-stroked-button (click)="agregar()" [disabled]="!codigo() || !cantidad() || cantidad() <= 0">
+          <mat-icon>add</mat-icon> Agregar
+        </button>
+      </div>
+
+      @if (lineas().length) {
+        <table class="lineas">
+          <thead><tr><th>Detalle</th><th class="num-right">Cant.</th><th class="num-right">Precio</th><th class="num-right">Subtotal</th><th></th></tr></thead>
+          <tbody>
+            @for (l of lineas(); track l.tipo + l.codigo) {
+              <tr>
+                <td>@if (l.tipo === 'kit') { <span class="chip info">Kit</span> } {{ l.descripcion }}</td>
+                <td class="num-right">{{ num(l.cantidad) }}</td>
+                <td class="num-right money">{{ bs(l.precio) }}</td>
+                <td class="num-right money">{{ bs(l.cantidad * l.precio) }}</td>
+                <td><button mat-icon-button (click)="quitar(l)" matTooltip="Quitar"><mat-icon>close</mat-icon></button></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        <div class="total">Total <span class="money">{{ bs(total()) }}</span></div>
+      } @else {
+        <p class="no-mods">Agregue los insumos o kits que el estudiante compra.</p>
+      }
+
+      <button mat-flat-button class="btn-guardar w-100" (click)="cobrar()"
+              [disabled]="!estudiante() || !lineas().length || guardando() || cerrado()">
+        @if (guardando()) { <mat-spinner diameter="18" /> } @else { <mat-icon>payments</mat-icon> }
+        Cobrar {{ lineas().length ? bs(total()) : '' }} y emitir recibo
+      </button>
+      @if (!estudiante()) { <p class="muted nota">Elija primero al estudiante.</p> }
+    </section>
+
+    <section class="panel-card">
+      <h3><mat-icon>receipt_long</mat-icon> Ventas de hoy</h3>
+      @for (v of ventasHoy(); track v.id) {
+        <div class="venta" [class.anulada]="v.estado === 'anulada'">
+          <div>
+            <span class="reg">{{ v.nro_recibo }}</span> · {{ v.estudiante }}
+            <div class="muted venta-det">{{ fechaHora(v.fecha_hora) }} · @for (l of v.lineas; track $index) { {{ num(l.cantidad) }} × {{ l.descripcion }}{{ $last ? '' : ', ' }} }</div>
+            @if (v.estado === 'anulada') { <div class="muted venta-det">Anulada: {{ v.motivo_anulacion }}</div> }
+          </div>
+          <div class="venta-acc">
+            <span class="money">{{ bs(v.total) }}</span>
+            <button mat-icon-button (click)="imprimir(v)" matTooltip="Imprimir recibo"><mat-icon>print</mat-icon></button>
+            @if (v.estado === 'vigente' && !v.id_cierre) {
+              <button mat-icon-button (click)="anular(v)" matTooltip="Anular venta"><mat-icon>block</mat-icon></button>
+            }
+          </div>
+        </div>
+      } @empty {
+        <p class="no-mods">Todavía no hay ventas hoy.</p>
+      }
+    </section>
+  </div>
+
+  @if (ultima(); as v) {
+    <div class="print-area recibo-print">
+      <h1>Recibo de venta {{ v.nro_recibo }}</h1>
+      <p>Carrera de Odontología — FICH · Mostrador de insumos</p>
+      <p>Estudiante: <strong>{{ v.estudiante }}</strong> (reg. {{ v.registro }}) · {{ fechaHora(v.fecha_hora) }} · Atendió: {{ v.vendedor }}</p>
+      <table>
+        <tr><th>Detalle</th><th>Cant.</th><th>Precio</th><th>Subtotal</th></tr>
+        @for (l of v.lineas; track $index) {
+          <tr><td>{{ l.descripcion }}</td><td>{{ num(l.cantidad) }}</td><td>{{ bs(l.precio_unitario) }}</td><td>{{ bs(l.subtotal) }}</td></tr>
+        }
+      </table>
+      <p class="total">Total: {{ bs(v.total) }}</p>
+    </div>
+  }
+</div>

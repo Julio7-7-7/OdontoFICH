@@ -1,0 +1,68 @@
+.inscripciones {
+  display: flex;
+  flex-direction: column;
+}
+
+.insc {
+  display: grid;
+  grid-template-columns: 1fr auto 44px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 0.5px solid var(--ap-separator);
+}
+
+.insc.anulada {
+  opacity: 0.55;
+}
+
+.materia {
+  padding: 12px 0 16px;
+  border-bottom: 0.5px solid var(--ap-separator);
+}
+
+.m-head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.m-pct {
+  font-weight: 800;
+  color: var(--fich-primary);
+}
+
+.tratamientos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.trat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--fich-bg-subtle);
+  font-size: 0.88rem;
+}
+
+.t-nombre {
+  flex: 1;
+}
+
+.t-cant {
+  font-family: var(--fich-font-mono);
+  font-weight: 700;
+}
+
+.leyenda {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 0.8rem;
+  color: var(--fich-text-muted);
+}

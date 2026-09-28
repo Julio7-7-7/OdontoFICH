@@ -1,0 +1,197 @@
+<div class="page-container">
+  <div class="header-card">
+    <div class="header-card-top">
+      <div class="header-card-title">
+        <div class="header-icon"><mat-icon>point_of_sale</mat-icon></div>
+        <div>
+          <h2>Cobros de cuotas</h2>
+          <p class="subtitle">Deuda anual del estudiante, cuotas y recibos</p>
+        </div>
+      </div>
+      <div class="buscador"><app-buscar-estudiante (elegido)="elegir($event)" /></div>
+    </div>
+  </div>
+
+  @if (cargando()) {
+    <div class="loading-state"><mat-spinner diameter="44" /><p>Cargando cuenta…</p></div>
+  } @else if (sinCuenta()) {
+    <div class="empty-state"><mat-icon>person_off</mat-icon><h4>Sin cuenta</h4><p>{{ sinCuenta() }}</p></div>
+  } @else if (cuenta(); as c) {
+    <div class="aviso" [class.ok]="c.habilitado_hoy" [class.danger]="!c.habilitado_hoy">
+      <mat-icon>{{ c.habilitado_hoy ? 'check_circle' : 'block' }}</mat-icon>
+      <div>
+        <strong>{{ c.estudiante }}</strong> (reg. {{ c.registro }}) —
+        @if (c.habilitado_hoy) { puede retirar material para prácticas hoy ({{ c.semestre_actual }}° semestre). }
+        @else { <strong>bloqueado para prácticas hoy:</strong> {{ c.motivo_bloqueo_hoy }} }
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi"><span class="kpi-icon azul"><mat-icon>receipt_long</mat-icon></span>
+        <span><div class="kpi-num">{{ bs(c.total) }}</div><div class="kpi-label">Deuda anual {{ c.anio }}</div></span></div>
+      <div class="kpi"><span class="kpi-icon verde"><mat-icon>paid</mat-icon></span>
+        <span><div class="kpi-num">{{ bs(c.pagado) }}</div><div class="kpi-label">Pagado</div></span></div>
+      <div class="kpi"><span class="kpi-icon" [class.rojo]="c.saldo > 0" [class.verde]="c.saldo <= 0"><mat-icon>account_balance_wallet</mat-icon></span>
+        <span><div class="kpi-num">{{ bs(c.saldo) }}</div><div class="kpi-label">Saldo</div></span></div>
+    </div>
+
+    <div class="dos-columnas">
+      <section class="panel-card">
+        <h3>
+          <mat-icon>calendar_month</mat-icon> Cuotas
+          <span class="spacer"></span>
+          <mat-button-toggle-group [value]="c.modalidad" [disabled]="pagosVigentes() > 0"
+                                   (change)="cambiarModalidad($event.value)" hideSingleSelectionIndicator
+                                   [matTooltip]="pagosVigentes() > 0 ? 'Ya tiene pagos: la modalidad no se puede cambiar' : ''">
+            <mat-button-toggle value="cuotas">2 cuotas</mat-button-toggle>
+            <mat-button-toggle value="contado">Contado</mat-button-toggle>
+          </mat-button-toggle-group>
+        </h3>
+        @for (q of c.cuotas; track q.nro) {
+          @if (q.estado !== 'no_aplica') {
+            <div class="cuota" [class.pagada]="q.estado === 'pagada'">
+              <div class="cuota-top">
+                <strong>{{ c.modalidad === 'contado' ? 'Pago al contado' : 'Cuota ' + q.nro }}</strong>
+                <span class="chip" [class.ok]="q.estado === 'pagada'" [class.warn]="q.estado === 'parcial'" [class.danger]="q.estado === 'pendiente'">
+                  {{ q.estado | titlecase }}
+                </span>
+              </div>
+              <div class="muted cuota-cubre">{{ q.cubre }} · vence {{ fecha(q.fecha_vencimiento) }}</div>
+              <div class="barra"><span [class.verde]="q.estado === 'pagada'" [style.width.%]="q.monto ? (100 * q.pagado) / q.monto : 0"></span></div>
+              <div class="cuota-montos"><span>Pagado {{ bs(q.pagado) }}</span><span>de <b>{{ bs(q.monto) }}</b></span></div>
+            </div>
+          }
+        }
+      </section>
+
+      <section class="panel-card">
+        <h3><mat-icon>payments</mat-icon> Registrar pago</h3>
+        @if (c.saldo > 0) {
+          <div class="atajos">
+            @if (saldoCuota(); as sc) {
+              <button mat-stroked-button type="button" (click)="monto.set(sc.saldo)">
+                {{ c.modalidad === 'contado' ? 'Total' : 'Cuota ' + sc.nro }} · {{ bs(sc.saldo) }}
+              </button>
+            }
+            <button mat-stroked-button type="button" (click)="monto.set(c.saldo)">Todo el saldo · {{ bs(c.saldo) }}</button>
+          </div>
+          <mat-form-field class="w-100">
+            <mat-label>Monto (Bs)</mat-label>
+            <input matInput type="number" min="0.01" [max]="c.saldo" step="0.01" [ngModel]="monto()" (ngModelChange)="monto.set($event)" />
+            <mat-hint>No puede superar el saldo ({{ bs(c.saldo) }})</mat-hint>
+          </mat-form-field>
+          <mat-form-field class="w-100">
+            <mat-label>Observación (opcional)</mat-label>
+            <input matInput maxlength="200" [ngModel]="observacion()" (ngModelChange)="observacion.set($event)" />
+          </mat-form-field>
+          <button mat-flat-button class="btn-guardar w-100" (click)="cobrar()"
+                  [disabled]="!monto() || monto()! <= 0 || monto()! > c.saldo || guardando()">
+            @if (guardando()) { <mat-spinner diameter="18" /> } @else { <mat-icon>point_of_sale</mat-icon> }
+            Cobrar y emitir recibo
+          </button>
+        } @else {
+          <div class="aviso ok"><mat-icon>verified</mat-icon><div>La cuenta de {{ c.anio }} está saldada.</div></div>
+          <button mat-flat-button class="btn-guardar" (click)="emitirConstancia()">
+            <mat-icon>workspace_premium</mat-icon> Emitir constancia de no adeudo
+          </button>
+        }
+
+        @if (recibo(); as r) {
+          <div class="aviso info recibo-listo">
+            <mat-icon>receipt</mat-icon>
+            <div>Recibo <strong>{{ r.nro_recibo }}</strong> por {{ bs(r.monto) }} emitido.</div>
+            <button mat-button (click)="imprimirRecibo()"><mat-icon>print</mat-icon> Imprimir</button>
+          </div>
+        }
+      </section>
+    </div>
+
+    <section class="panel-card">
+      <h3>
+        <mat-icon>history</mat-icon> Pagos de la gestión {{ c.anio }}
+        <span class="spacer"></span>
+        <a mat-button [routerLink]="['/estudiantes', c.registro]"><mat-icon>school</mat-icon> Ficha y avance</a>
+      </h3>
+      @if (c.pagos.length) {
+        <table mat-table [dataSource]="c.pagos" class="full-width-table">
+          <ng-container matColumnDef="recibo">
+            <th mat-header-cell *matHeaderCellDef>Recibo</th>
+            <td mat-cell *matCellDef="let p"><span class="reg">{{ p.nro_recibo }}</span></td>
+          </ng-container>
+          <ng-container matColumnDef="fecha">
+            <th mat-header-cell *matHeaderCellDef>Fecha</th>
+            <td mat-cell *matCellDef="let p">{{ fechaHora(p.fecha_hora) }}</td>
+          </ng-container>
+          <ng-container matColumnDef="monto">
+            <th mat-header-cell *matHeaderCellDef class="num-right">Monto</th>
+            <td mat-cell *matCellDef="let p" class="num-right money">{{ bs(p.monto) }}</td>
+          </ng-container>
+          <ng-container matColumnDef="cajero">
+            <th mat-header-cell *matHeaderCellDef>Cajero</th>
+            <td mat-cell *matCellDef="let p">{{ p.cajero }}</td>
+          </ng-container>
+          <ng-container matColumnDef="estado">
+            <th mat-header-cell *matHeaderCellDef class="col-center">Estado</th>
+            <td mat-cell *matCellDef="let p" class="col-center">
+              <span class="chip" [class.ok]="p.estado === 'vigente'" [class.muted]="p.estado === 'anulado'"
+                    [matTooltip]="p.motivo_anulacion ?? ''">{{ p.estado | titlecase }}</span>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef class="col-center">Acciones</th>
+            <td mat-cell *matCellDef="let p" class="col-center">
+              <button mat-icon-button (click)="reimprimir(p)" matTooltip="Imprimir recibo"><mat-icon>print</mat-icon></button>
+              @if (p.estado === 'vigente') {
+                <button mat-icon-button (click)="anular(p)" matTooltip="Anular pago"><mat-icon>block</mat-icon></button>
+              }
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="columnasPagos"></tr>
+          <tr mat-row *matRowDef="let row; columns: columnasPagos"></tr>
+        </table>
+      } @else {
+        <p class="no-mods">Todavía no registra pagos.</p>
+      }
+
+      <h3 class="sub-h3"><mat-icon>menu_book</mat-icon> Materias inscritas</h3>
+      <div class="chips-lista">
+        @for (i of c.inscripciones; track i.id) {
+          <span class="mod-chip" [class.anulada]="i.estado === 'anulada'">{{ i.sigla }} · {{ i.materia }} · <b>{{ bs(i.monto) }}</b></span>
+        }
+      </div>
+    </section>
+
+    <!-- Documento imprimible (recibo o constancia) -->
+    <div class="print-area recibo-print">
+      @if (recibo(); as r) {
+        <h1>Recibo de pago {{ r.nro_recibo }}</h1>
+        <p>Carrera de Odontología — FICH · Prácticas clínicas, gestión {{ r.anio }}</p>
+        <table>
+          <tr><th>Estudiante</th><td>{{ r.estudiante }} (reg. {{ r.registro }})</td></tr>
+          <tr><th>Fecha</th><td>{{ fechaHora(r.fecha_hora) }}</td></tr>
+          <tr><th>Concepto</th><td>Pago a la cuenta anual de prácticas{{ r.observacion ? ' — ' + r.observacion : '' }}</td></tr>
+          <tr><th>Cajero</th><td>{{ r.cajero }}</td></tr>
+          <tr><th>Saldo pendiente tras este pago</th><td>{{ bs(c.saldo) }}</td></tr>
+        </table>
+        <p class="total">Total pagado: {{ bs(r.monto) }}</p>
+      }
+      @if (constancia(); as k) {
+        <h1>Constancia de no adeudo</h1>
+        <p>Carrera de Odontología — FICH · Gestión {{ k.anio }}</p>
+        <p style="font-size: 12pt; margin-top: 16pt">{{ k.mensaje }}</p>
+        <table>
+          <tr><th>Deuda anual</th><td>{{ bs(k.total) }}</td></tr>
+          <tr><th>Pagado</th><td>{{ bs(k.pagado) }}</td></tr>
+          <tr><th>Saldo</th><td>{{ bs(k.saldo) }}</td></tr>
+        </table>
+        <p style="margin-top: 24pt">Emitida el {{ fechaHora(k.emitida_en) }}</p>
+      }
+    </div>
+  } @else {
+    <div class="empty-state">
+      <mat-icon>person_search</mat-icon>
+      <h4>Busque un estudiante</h4>
+      <p>Escriba el registro, nombre o CI para ver su deuda anual y registrar pagos.</p>
+    </div>
+  }
+</div>

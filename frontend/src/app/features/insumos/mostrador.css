@@ -1,0 +1,95 @@
+.grid-venta {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .grid-venta {
+    grid-template-columns: 1fr;
+  }
+}
+
+.agregar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.f-item {
+  flex: 1 1 260px;
+}
+
+.f-cant {
+  width: 110px;
+}
+
+.lineas {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.lineas th {
+  text-align: left;
+  font-size: 0.72rem;
+  
+  color: var(--fich-text-muted);
+  padding: 6px 4px;
+  border-bottom: 0.5px solid var(--ap-separator);
+}
+
+.lineas td {
+  padding: 6px 4px;
+  border-bottom: 0.5px solid var(--ap-separator);
+}
+
+.total {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  font-size: 1.2rem;
+  font-weight: 800;
+  margin: 14px 0;
+}
+
+.w-100 {
+  width: 100%;
+}
+
+.nota {
+  font-size: 0.8rem;
+  margin: 8px 0 0;
+}
+
+.venta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 0.5px solid var(--ap-separator);
+  font-size: 0.88rem;
+}
+
+.venta.anulada {
+  opacity: 0.55;
+}
+
+.venta.anulada .money {
+  text-decoration: line-through;
+}
+
+.venta-det {
+  font-size: 0.78rem;
+  margin-top: 2px;
+}
+
+.venta-acc {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+}

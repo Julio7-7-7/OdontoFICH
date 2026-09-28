@@ -1,0 +1,54 @@
+<mat-sidenav-container class="shell">
+  <mat-sidenav
+    class="shell-nav"
+    [mode]="movil() ? 'over' : 'side'"
+    [opened]="!movil() || abierto()"
+    (closedStart)="abierto.set(false)">
+    <a class="brand" routerLink="/panel">
+      <span class="brand-mark"><mat-icon>healing</mat-icon></span>
+      <span class="brand-text">
+        <strong>OdontoFich</strong>
+        <small>Prácticas clínicas · FICH</small>
+      </span>
+    </a>
+
+    <nav>
+      @for (g of grupos(); track g.titulo) {
+        <div class="nav-grupo">{{ g.titulo }}</div>
+        @for (item of g.items; track item.ruta) {
+          <a class="nav-item" [routerLink]="item.ruta" routerLinkActive="activo">
+            <mat-icon>{{ item.icon }}</mat-icon>
+            <span>{{ item.label }}</span>
+          </a>
+        }
+      }
+    </nav>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="shell-content">
+    <header class="topbar">
+      @if (movil()) {
+        <button mat-icon-button (click)="abierto.set(true)" aria-label="Abrir menú">
+          <mat-icon>menu</mat-icon>
+        </button>
+      }
+      <span class="topbar-spacer"></span>
+      <button mat-icon-button (click)="alternarTema()" [matTooltip]="oscuro() ? 'Tema claro' : 'Tema oscuro'">
+        <mat-icon>{{ oscuro() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+      </button>
+      <div class="user-chip">
+        <span class="user-avatar">{{ iniciales() }}</span>
+        <span class="user-info">
+          <strong>{{ auth.usuario()?.nombre_completo }}</strong>
+          <small>{{ rolLabel() }}</small>
+        </span>
+      </div>
+      <button mat-icon-button (click)="auth.logout()" matTooltip="Cerrar sesión" aria-label="Cerrar sesión">
+        <mat-icon>logout</mat-icon>
+      </button>
+    </header>
+    <main>
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

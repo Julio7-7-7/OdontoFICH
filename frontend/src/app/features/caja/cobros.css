@@ -1,0 +1,65 @@
+.buscador {
+  flex: 1 1 320px;
+  max-width: 440px;
+  margin-left: auto;
+}
+
+.w-100 {
+  width: 100%;
+}
+
+.cuota {
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--ap-fill-2);
+  margin-bottom: 10px;
+  transition: background-color var(--ap-dur) var(--ap-ease);
+}
+
+.cuota.pagada {
+  background: var(--ap-green-tint);
+}
+
+.cuota-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cuota-cubre {
+  font-size: 0.8rem;
+  margin: 4px 0 10px;
+}
+
+.cuota-montos {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 0.82rem;
+  color: var(--fich-text-muted);
+}
+
+.atajos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.recibo-listo {
+  margin-top: 16px;
+  align-items: center;
+}
+
+.recibo-listo div {
+  flex: 1;
+}
+
+.sub-h3 {
+  margin-top: 22px !important;
+}
+
+.mod-chip.anulada {
+  text-decoration: line-through;
+  opacity: 0.55;
+}

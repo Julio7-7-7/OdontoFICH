@@ -1,0 +1,104 @@
+<div class="page-container">
+  <div class="header-card">
+    <div class="header-card-top">
+      <div class="header-card-title">
+        <div class="header-icon"><mat-icon>dashboard</mat-icon></div>
+        <div>
+          <h2>Panel del día</h2>
+          <p class="subtitle">
+            @if (datos(); as d) { {{ fecha(d.fecha) }} · {{ d.semestre === 1 ? '1er' : '2do' }} semestre (se exige la cuota {{ d.semestre }}) }
+            @else { Cargando… }
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  @if (datos(); as d) {
+    <div class="kpi-grid">
+      <a class="kpi" [routerLink]="auth.puede('caja') ? '/caja/recaudacion' : null">
+        <span class="kpi-icon verde"><mat-icon>point_of_sale</mat-icon></span>
+        <span><div class="kpi-num">{{ bs(d.cobrado_hoy_cuotas) }}</div><div class="kpi-label">Cuotas cobradas hoy</div></span>
+      </a>
+      <a class="kpi" [routerLink]="auth.puede('encargado_insumos') ? '/insumos/cierre' : null">
+        <span class="kpi-icon verde"><mat-icon>storefront</mat-icon></span>
+        <span><div class="kpi-num">{{ bs(d.vendido_hoy_extras) }}</div><div class="kpi-label">Extras vendidos hoy</div></span>
+      </a>
+      <a class="kpi" [routerLink]="auth.puede('encargado_insumos') ? '/insumos/entregas' : null">
+        <span class="kpi-icon azul"><mat-icon>assignment_turned_in</mat-icon></span>
+        <span><div class="kpi-num">{{ d.pendientes_de_entrega_hoy }} / {{ d.kits_entregados_hoy }}</div><div class="kpi-label">Kits por entregar / entregados</div></span>
+      </a>
+      <a class="kpi" [routerLink]="auth.puede('docente') ? '/docente/sesiones' : null">
+        <span class="kpi-icon azul"><mat-icon>medical_services</mat-icon></span>
+        <span><div class="kpi-num">{{ d.sesiones_hoy }}</div><div class="kpi-label">Sesiones de práctica hoy</div></span>
+      </a>
+      <a class="kpi" [routerLink]="auth.puede('encargado_insumos') ? '/insumos/stock' : null">
+        <span class="kpi-icon" [class.rojo]="d.insumos_bajo_minimo > 0" [class.verde]="d.insumos_bajo_minimo === 0"><mat-icon>inventory_2</mat-icon></span>
+        <span><div class="kpi-num">{{ d.insumos_bajo_minimo }}</div><div class="kpi-label">Insumos bajo el mínimo</div></span>
+      </a>
+      <a class="kpi" [routerLink]="auth.puede('caja') ? '/caja/deudores' : null">
+        <span class="kpi-icon ambar"><mat-icon>money_off</mat-icon></span>
+        <span><div class="kpi-num">{{ d.estudiantes_con_deuda }}</div><div class="kpi-label">Estudiantes con deuda</div></span>
+      </a>
+      @if (auth.esAdmin()) {
+        <a class="kpi" routerLink="/admin/cierres">
+          <span class="kpi-icon" [class.ambar]="d.cierres_por_recibir > 0" [class.verde]="d.cierres_por_recibir === 0"><mat-icon>fact_check</mat-icon></span>
+          <span><div class="kpi-num">{{ d.cierres_por_recibir }}</div><div class="kpi-label">Cierres de caja por recibir</div></span>
+        </a>
+      }
+    </div>
+  } @else {
+    <div class="loading-state"><mat-spinner diameter="44" /><p>Cargando el resumen del día…</p></div>
+  }
+
+  <div class="dos-columnas">
+    <section class="panel-card">
+      <h3><mat-icon>route</mat-icon> Circuito de una práctica</h3>
+      <ol class="circuito">
+        <li><span class="paso">1</span><div><strong>Caja</strong> cobra la cuota del semestre y emite el recibo.</div></li>
+        <li><span class="paso">2</span><div><strong>El docente</strong> crea la sesión y marca a sus estudiantes; el sistema bloquea a quien no pagó.</div></li>
+        <li><span class="paso">3</span><div><strong>Insumos</strong> entrega el kit a los habilitados; el stock baja solo.</div></li>
+        <li><span class="paso">4</span><div>Si falta material, <strong>insumos</strong> vende el extra y cierra caja al final del día.</div></li>
+      </ol>
+    </section>
+
+    @if (auth.puede('docente') && sesionesHoy().length) {
+      <section class="panel-card">
+        <h3><mat-icon>medical_services</mat-icon> Sesiones de hoy</h3>
+        @for (s of sesionesHoy(); track s.id) {
+          <a class="fila-link" [routerLink]="['/docente/sesiones', s.id]">
+            <span><strong>{{ s.tratamiento }}</strong> · {{ s.materia }}<br /><small class="muted">{{ s.docente }}</small></span>
+            <span class="fila-acciones">
+              <span class="chip ok">{{ s.habilitados }} habilitados</span>
+              <span class="chip danger">{{ s.bloqueados }} bloqueados</span>
+            </span>
+          </a>
+        }
+      </section>
+    }
+
+    @if (auth.puede('encargado_insumos') && stockBajo().length) {
+      <section class="panel-card">
+        <h3><mat-icon>warning</mat-icon> Reponer pronto</h3>
+        @for (i of stockBajo(); track i.codigo) {
+          <a class="fila-link" routerLink="/insumos/stock">
+            <span><strong>{{ i.nombre }}</strong> <small class="muted">({{ i.codigo }})</small></span>
+            <span class="chip danger">{{ num(i.stock) }} / mín. {{ num(i.stock_minimo) }} {{ i.unidad_medida }}</span>
+          </a>
+        }
+      </section>
+    }
+  </div>
+</div>
+
+<style>
+  .circuito { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+  .circuito li { display: flex; gap: 12px; align-items: flex-start; line-height: 1.45; }
+  .paso { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0;
+    background: var(--ap-accent); color: white; font-weight: 700; font-size: 0.82rem; }
+  .fila-link { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 11px 10px; margin: 0 -10px;
+    border-radius: 12px; text-decoration: none; color: inherit; transition: background-color var(--ap-dur-fast) var(--ap-ease); }
+  .fila-link + .fila-link { box-shadow: inset 0 0.5px 0 var(--ap-separator); }
+  .fila-link:hover { background: var(--ap-fill-hover); }
+  .fila-link:active { background: var(--ap-fill-press); }
+</style>

@@ -1,0 +1,255 @@
+@use '@angular/material' as mat;
+
+/* ════════════════════════════════════════════════════════════════
+   OdontoFich — tema "Apple"
+   Base Material 3 recoloreada con los colores de sistema de Apple
+   (azul de sistema, grises agrupados, separadores finos) y formas
+   redondeadas continuas. Los tokens propios viven en --ap-*; los
+   --fich-* se mantienen solo como alias para el CSS de cada pantalla.
+   ════════════════════════════════════════════════════════════════ */
+
+@include mat.core();
+
+$tipografia: '-apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, "Helvetica Neue", sans-serif';
+
+$tema-claro: mat.define-theme((
+  color: (theme-type: light, primary: mat.$azure-palette, tertiary: mat.$blue-palette),
+  density: (scale: 0),
+  typography: (plain-family: $tipografia, brand-family: $tipografia, bold-weight: 600),
+));
+
+$tema-oscuro: mat.define-theme((
+  color: (theme-type: dark, primary: mat.$azure-palette, tertiary: mat.$blue-palette),
+  density: (scale: 0),
+  typography: (plain-family: $tipografia, brand-family: $tipografia, bold-weight: 600),
+));
+
+html {
+  height: 100%;
+  @include mat.all-component-themes($tema-claro);
+
+  /* Formas: esquinas continuas y generosas, como en iOS/macOS */
+  --mat-sys-corner-extra-small: 10px;
+  --mat-sys-corner-small: 10px;
+  --mat-sys-corner-medium: 14px;
+  --mat-sys-corner-large: 18px;
+  --mat-sys-corner-extra-large: 22px;
+}
+
+/* ─── Paleta clara (colores de sistema de Apple) ─── */
+:root {
+  --ap-accent: #0071e3;
+  --ap-accent-hover: #0077ed;
+  --ap-accent-pressed: #006edb;
+  --ap-accent-tint: rgba(0, 113, 227, 0.1);
+  --ap-accent-text: #0066cc;
+
+  --ap-green: #248a3d;
+  --ap-green-fill: #34c759;
+  --ap-green-tint: rgba(52, 199, 89, 0.14);
+  --ap-orange: #c93400;
+  --ap-orange-fill: #ff9500;
+  --ap-orange-tint: rgba(255, 149, 0, 0.15);
+  --ap-red: #d70015;
+  --ap-red-fill: #ff3b30;
+  --ap-red-tint: rgba(255, 59, 48, 0.12);
+  --ap-indigo: #5856d6;
+  --ap-indigo-tint: rgba(88, 86, 214, 0.12);
+  --ap-teal: #0e7c86;
+  --ap-teal-tint: rgba(48, 176, 199, 0.14);
+
+  --ap-label: #1d1d1f;
+  --ap-label-2: rgba(60, 60, 67, 0.72);
+  --ap-label-3: rgba(60, 60, 67, 0.52);
+  --ap-label-4: rgba(60, 60, 67, 0.3);
+  --ap-separator: rgba(60, 60, 67, 0.14);
+  --ap-separator-strong: rgba(60, 60, 67, 0.24);
+
+  --ap-bg: #f5f5f7;
+  --ap-surface: #ffffff;
+  --ap-surface-2: #fbfbfd;
+  --ap-fill: rgba(118, 118, 128, 0.12);
+  --ap-fill-2: rgba(118, 118, 128, 0.08);
+  --ap-fill-hover: rgba(0, 0, 0, 0.035);
+  --ap-fill-press: rgba(0, 0, 0, 0.06);
+
+  --ap-material: rgba(250, 250, 252, 0.72);
+  --ap-material-thick: rgba(246, 246, 248, 0.9);
+  --ap-sidebar: rgba(236, 236, 240, 0.7);
+
+  --ap-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 1px rgba(0, 0, 0, 0.02);
+  --ap-shadow-2: 0 2px 8px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.05);
+  --ap-shadow-3: 0 12px 40px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+
+  --ap-radius-s: 10px;
+  --ap-radius-m: 14px;
+  --ap-radius-l: 20px;
+  --ap-radius-xl: 26px;
+
+  /* Curvas: la estándar de UIKit (críticamente amortiguada) y una con leve rebote
+     reservada a lo que "aparece desde" un gesto (Designing Fluid Interfaces). */
+  --ap-ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --ap-ease-out: cubic-bezier(0.25, 1, 0.5, 1);
+  --ap-spring: cubic-bezier(0.34, 1.36, 0.64, 1);
+  --ap-dur-fast: 120ms;
+  --ap-dur: 280ms;
+  --ap-dur-slow: 480ms;
+
+  --ap-font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', 'Helvetica Neue', sans-serif;
+  --ap-font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Helvetica Neue', sans-serif;
+  --ap-font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+
+  color-scheme: light;
+}
+
+/* ─── Paleta oscura (solo en pantalla: al imprimir se usa la clara) ─── */
+@media screen {
+  :root[data-theme='dark'] {
+    @include mat.all-component-colors($tema-oscuro);
+    color-scheme: dark;
+
+    --ap-accent: #0a84ff;
+    --ap-accent-hover: #409cff;
+    --ap-accent-pressed: #0077ed;
+    --ap-accent-tint: rgba(10, 132, 255, 0.2);
+    --ap-accent-text: #4da3ff;
+
+    --ap-green: #30d158;
+    --ap-green-fill: #30d158;
+    --ap-green-tint: rgba(48, 209, 88, 0.18);
+    --ap-orange: #ff9f0a;
+    --ap-orange-fill: #ff9f0a;
+    --ap-orange-tint: rgba(255, 159, 10, 0.2);
+    --ap-red: #ff6961;
+    --ap-red-fill: #ff453a;
+    --ap-red-tint: rgba(255, 69, 58, 0.2);
+    --ap-indigo: #7d7aff;
+    --ap-indigo-tint: rgba(94, 92, 230, 0.24);
+    --ap-teal: #5ac8d8;
+    --ap-teal-tint: rgba(64, 200, 224, 0.2);
+
+    --ap-label: #f5f5f7;
+    --ap-label-2: rgba(235, 235, 245, 0.72);
+    --ap-label-3: rgba(235, 235, 245, 0.5);
+    --ap-label-4: rgba(235, 235, 245, 0.28);
+    --ap-separator: rgba(84, 84, 88, 0.55);
+    --ap-separator-strong: rgba(120, 120, 128, 0.6);
+
+    --ap-bg: #000000;
+    --ap-surface: #1c1c1e;
+    --ap-surface-2: #2c2c2e;
+    --ap-fill: rgba(118, 118, 128, 0.24);
+    --ap-fill-2: rgba(118, 118, 128, 0.16);
+    --ap-fill-hover: rgba(255, 255, 255, 0.05);
+    --ap-fill-press: rgba(255, 255, 255, 0.09);
+
+    --ap-material: rgba(28, 28, 30, 0.72);
+    --ap-material-thick: rgba(40, 40, 42, 0.92);
+    --ap-sidebar: rgba(30, 30, 32, 0.72);
+
+    --ap-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --ap-shadow-2: 0 2px 8px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+    --ap-shadow-3: 0 16px 48px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* ─── Material: tokens de sistema apuntando a la paleta Apple ───
+   Mismo selector que el modo oscuro (:root[data-theme]) para que sus colores de Material no los pisen. */
+:root, :root[data-theme='dark'] {
+  --mat-sys-primary: var(--ap-accent);
+  --mat-sys-on-primary: #fff;
+  --mat-sys-primary-container: var(--ap-accent-tint);
+  --mat-sys-on-primary-container: var(--ap-accent-text);
+  --mat-sys-surface: var(--ap-surface);
+  --mat-sys-surface-container: var(--ap-surface);
+  --mat-sys-surface-container-high: var(--ap-surface);
+  --mat-sys-surface-container-highest: var(--ap-fill);
+  --mat-sys-surface-container-low: var(--ap-surface);
+  --mat-sys-on-surface: var(--ap-label);
+  --mat-sys-on-surface-variant: var(--ap-label-2);
+  --mat-sys-outline: var(--ap-separator-strong);
+  --mat-sys-outline-variant: var(--ap-separator);
+  --mat-sys-error: var(--ap-red-fill);
+
+  /* Interruptor: verde de sistema, como en Ajustes */
+  --mat-slide-toggle-selected-track-color: var(--ap-green-fill);
+  --mat-slide-toggle-selected-hover-track-color: var(--ap-green-fill);
+  --mat-slide-toggle-selected-focus-track-color: var(--ap-green-fill);
+  --mat-slide-toggle-selected-pressed-track-color: var(--ap-green-fill);
+  --mat-slide-toggle-selected-handle-color: #fff;
+  --mat-slide-toggle-selected-hover-handle-color: #fff;
+  --mat-slide-toggle-selected-focus-handle-color: #fff;
+  --mat-slide-toggle-selected-pressed-handle-color: #fff;
+  --mat-slide-toggle-unselected-track-color: var(--ap-fill);
+  --mat-slide-toggle-unselected-hover-track-color: var(--ap-fill);
+  --mat-slide-toggle-unselected-focus-track-color: var(--ap-fill);
+  --mat-slide-toggle-unselected-pressed-track-color: var(--ap-fill);
+  --mat-slide-toggle-unselected-track-outline-color: transparent;
+  --mat-slide-toggle-unselected-handle-color: #fff;
+  --mat-slide-toggle-unselected-hover-handle-color: #fff;
+  --mat-slide-toggle-unselected-focus-handle-color: #fff;
+  --mat-slide-toggle-unselected-pressed-handle-color: #fff;
+  --mat-slide-toggle-selected-icon-color: transparent;
+  --mat-slide-toggle-unselected-icon-color: transparent;
+
+  /* Diálogos: hoja redondeada */
+  --mat-dialog-container-shape: 22px;
+  --mat-dialog-container-color: var(--ap-surface);
+  --mat-dialog-subhead-color: var(--ap-label);
+  --mat-dialog-supporting-text-color: var(--ap-label-2);
+
+  /* Menús / selects / autocomplete: popover translúcido */
+  --mat-select-panel-background-color: var(--ap-material-thick);
+  --mat-autocomplete-background-color: var(--ap-material-thick);
+  --mat-option-selected-state-layer-color: var(--ap-accent-tint);
+  --mat-option-selected-state-label-text-color: var(--ap-accent-text);
+
+  --mat-snack-bar-container-shape: 14px;
+  --mat-tooltip-container-shape: 8px;
+  --mat-tooltip-container-color: rgba(30, 30, 32, 0.92);
+  --mat-tooltip-supporting-text-color: #fff;
+}
+
+body {
+  margin: 0;
+  height: 100%;
+  font-family: var(--ap-font);
+  background-color: var(--ap-bg);
+  color: var(--ap-label);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'cv11', 'ss01', 'ss03';
+}
+
+/* ─── Alias --fich-* para el CSS existente de cada pantalla ─── */
+:root {
+  --fich-primary: var(--ap-accent);
+  --fich-primary-dark: var(--ap-accent-text);
+  --fich-primary-light: var(--ap-accent-tint);
+  --fich-feature-programa: var(--ap-accent);
+  --fich-success: var(--ap-green);
+  --fich-success-light: var(--ap-green-tint);
+  --fich-success-border: transparent;
+  --fich-warning: var(--ap-orange);
+  --fich-warning-light: var(--ap-orange-tint);
+  --fich-danger: var(--ap-red);
+  --fich-danger-light: var(--ap-red-tint);
+  --fich-danger-border: transparent;
+  --fich-info: var(--ap-accent-text);
+  --fich-info-light: var(--ap-accent-tint);
+  --fich-text: var(--ap-label);
+  --fich-text-secondary: var(--ap-label-2);
+  --fich-text-muted: var(--ap-label-2);
+  --fich-text-faint: var(--ap-label-3);
+  --fich-border: var(--ap-separator);
+  --fich-border-light: var(--ap-separator);
+  --fich-bg: var(--ap-bg);
+  --fich-bg-card: var(--ap-surface);
+  --fich-bg-subtle: var(--ap-fill-2);
+  --fich-bg-hover: var(--ap-fill-hover);
+  --fich-bg-active: var(--ap-fill);
+  --fich-font-mono: var(--ap-font);
+  --fich-shadow-sm: var(--ap-shadow-1);
+  --fich-shadow-lg: var(--ap-shadow-2);
+  --fich-transition: var(--ap-dur) var(--ap-ease);
+}
